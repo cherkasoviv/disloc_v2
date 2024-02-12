@@ -7,8 +7,8 @@ import (
 )
 
 type MongoStorage struct {
-	connString string
-	client     *mongo.Client
+	connectionString string
+	client           *mongo.Client
 }
 
 // TODO add conn string from config
@@ -18,8 +18,8 @@ func InitializeMongoStorage() (*MongoStorage, error) {
 		return nil, err
 	}
 	ms := MongoStorage{
-		connString: "",
-		client:     client,
+		connectionString: "",
+		client:           client,
 	}
 	return &ms, nil
 }
