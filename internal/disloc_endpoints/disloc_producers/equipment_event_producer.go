@@ -42,7 +42,7 @@ func NewEventProducer() *Producer {
 		nil,              // arguments
 	)
 	if err == nil {
-		log.Printf("producer: declared queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
+		log.Printf("producer: declared queue (%q %d messages, %d consumers)",
 			queue.Name, queue.Messages, queue.Consumers)
 	} else {
 		log.Fatalf("producer: Queue Declare: %s", err)
