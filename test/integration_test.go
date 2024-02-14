@@ -202,6 +202,7 @@ func TestConsumer(t *testing.T) {
 
 	}
 	mi := len(evnts)
+	fmt.Println(mi)
 	if mi != 3 {
 		t.Errorf("Not enough matched events")
 	}
