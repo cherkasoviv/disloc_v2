@@ -11,7 +11,7 @@ import (
 
 func main() {
 	fmt.Println("test")
-	storage, err := disloc_storage.InitializeMongoStorage()
+	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false")
 	if err != nil {
 		return
 	}

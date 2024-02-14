@@ -7,12 +7,12 @@ import (
 
 func main() {
 
-	storage, err := disloc_storage.InitializeMongoStorage()
+	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false")
 	if err != nil {
 		return
 	}
 
 	matcher := disloc_matching.Initialize(storage, 1)
 	matcher.Start()
-	storage.FindShipmentByContainer("TTTU4488223")
+
 }

@@ -23,8 +23,8 @@ type Producer struct {
 	queue   *amqp.Queue
 }
 
-func NewEventProducer() *Producer {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/") // Создаем подключение к RabbitMQ
+func NewEventProducer(uri string) *Producer {
+	conn, err := amqp.Dial(uri) // Создаем подключение к RabbitMQ
 	if err != nil {
 		log.Fatalf("unable to open connect to RabbitMQ server. Error: %s", err)
 	}

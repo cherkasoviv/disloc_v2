@@ -7,11 +7,11 @@ import (
 
 func main() {
 
-	storage, err := disloc_storage.InitializeMongoStorage()
+	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false")
 	if err != nil {
 		return
 	}
-	eventSender := disloc_producers.NewEventProducer()
+	eventSender := disloc_producers.NewEventProducer("amqp://guest:guest@localhost:5672/")
 	eventSender.Publish(storage)
 
 }

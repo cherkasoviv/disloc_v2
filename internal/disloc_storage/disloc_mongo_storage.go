@@ -12,8 +12,8 @@ type MongoStorage struct {
 }
 
 // TODO add conn string from config
-func InitializeMongoStorage() (*MongoStorage, error) {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false"))
+func InitializeMongoStorage(uri string) (*MongoStorage, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
