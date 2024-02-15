@@ -6,6 +6,7 @@ import (
 	"github.com/cherkasoviv/go_disl/internal/disloc_storage"
 	"github.com/cherkasoviv/go_disl/internal/equipment_event"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
 	"time"
 )
 
@@ -36,19 +37,19 @@ func NewEquipmentEventConsumer(amqpURI, exchange, exchangeType, queueName, key, 
 
 	config := amqp.Config{Properties: amqp.NewConnectionProperties()}
 	config.Properties.SetClientConnectionName("sample-consumer")
-	fmt.Printf("dialing %q", amqpURI)
+	log.Printf("dialing %q", amqpURI)
 	c.conn, err = amqp.DialConfig(amqpURI, config)
 	if err != nil {
 		return nil, fmt.Errorf("Dial: %s", err)
 	}
 
-	fmt.Printf("got Connection, getting Channel")
+	log.Printf("got Connection, getting Channel")
 	c.channel, err = c.conn.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
 
-	fmt.Printf("got Channel, declaring Exchange (%q)", exchange)
+	log.Printf("got Channel, declaring Exchange (%q)", exchange)
 	if err = c.channel.ExchangeDeclare(
 		exchange,     // name of the exchange
 		exchangeType, // type
@@ -61,7 +62,7 @@ func NewEquipmentEventConsumer(amqpURI, exchange, exchangeType, queueName, key, 
 		return nil, fmt.Errorf("Exchange Declare: %s", err)
 	}
 
-	fmt.Printf("declared Exchange, declaring Queue %q", queueName)
+	log.Printf("declared Exchange, declaring Queue %q", queueName)
 	queue, err := c.channel.QueueDeclare(
 		queueName, // name of the queue
 		true,      // durable
@@ -74,7 +75,7 @@ func NewEquipmentEventConsumer(amqpURI, exchange, exchangeType, queueName, key, 
 		return nil, fmt.Errorf("queue Declare: %s", err)
 	}
 
-	fmt.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
+	log.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
 		queue.Name, queue.Messages, queue.Consumers, key)
 
 	if err = c.channel.QueueBind(
@@ -87,7 +88,7 @@ func NewEquipmentEventConsumer(amqpURI, exchange, exchangeType, queueName, key, 
 		return nil, fmt.Errorf("Queue Bind: %s", err)
 	}
 
-	fmt.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
+	log.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
 	deliveries, err := c.channel.Consume(
 		queue.Name, // name
 		c.tag,      // consumerTag,
@@ -116,7 +117,7 @@ func (c *Consumer) Shutdown() error {
 		return fmt.Errorf("AMQP connection close error: %s", err)
 	}
 
-	defer fmt.Printf("AMQP shutdown OK")
+	defer log.Printf("AMQP shutdown OK")
 
 	// wait for handle() to exit
 	return <-c.done
@@ -124,7 +125,7 @@ func (c *Consumer) Shutdown() error {
 
 func handle(deliveries <-chan amqp.Delivery, done chan error, storage *disloc_storage.MongoStorage) {
 	cleanup := func() {
-		fmt.Printf("handle: deliveries channel closed")
+		log.Printf("handle: deliveries channel closed")
 		done <- nil
 	}
 
