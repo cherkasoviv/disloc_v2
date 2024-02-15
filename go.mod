@@ -8,6 +8,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/rabbitmq/amqp091-go v1.9.0
 	go.mongodb.org/mongo-driver v1.13.1
+	golang.org/x/net v0.20.0
 )
 
 require (

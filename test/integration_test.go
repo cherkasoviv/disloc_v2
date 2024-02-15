@@ -108,7 +108,7 @@ func TestConsumer(t *testing.T) {
 		log.Fatalf("error getting a channel: %s", err)
 	}
 
-	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:" + mongoPort + "/?readPreference=primary&directConnection=true&ssl=false")
+	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:"+mongoPort+"/?readPreference=primary&directConnection=true&ssl=false", context.Background())
 	if err != nil {
 		return
 	}
@@ -136,7 +136,7 @@ func TestConsumer(t *testing.T) {
 
 	}
 	time.Sleep(20 * time.Second)
-	i := len(storage.FindEquipmentsByContainerNumber("TTTU4488225"))
+	i := len(storage.FindEquipmentsByContainerNumber("TTTU4488225", context.Background()))
 	t.Run("simple count", func(t *testing.T) {
 		if i != 1 {
 			t.Errorf("Different number")
@@ -155,7 +155,7 @@ func TestConsumer(t *testing.T) {
 		log.Fatalf("producer: error in publish: %s", err)
 	}
 	time.Sleep(20 * time.Second)
-	i = len(storage.FindEquipmentsByContainerNumber("TTTU4488225"))
+	i = len(storage.FindEquipmentsByContainerNumber("TTTU4488225", context.Background()))
 	t.Run("simple second count", func(t *testing.T) {
 		if i != 2 {
 			t.Errorf("Different number")
@@ -174,7 +174,7 @@ func TestConsumer(t *testing.T) {
 		log.Fatalf("producer: error in publish: %s", err)
 	}
 	time.Sleep(20 * time.Second)
-	i = len(storage.FindEquipmentsByContainerNumber("TTTU4488225"))
+	i = len(storage.FindEquipmentsByContainerNumber("TTTU4488225", context.Background()))
 	t.Run("simple second count", func(t *testing.T) {
 		if i != 3 {
 			t.Errorf("Different number")

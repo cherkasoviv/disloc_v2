@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (mongoStorage *MongoStorage) WriteEquipmentShipment(equipmentShipment *equipment_shipment.EquipmentShipment) error {
+func (mongoStorage *MongoStorage) WriteEquipmentShipment(equipmentShipment *equipment_shipment.EquipmentShipment, ctx context.Context) error {
 	dateStart, dateEnd := equipmentShipment.GetPeriod()
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("equipment_shipments")
@@ -21,7 +21,7 @@ func (mongoStorage *MongoStorage) WriteEquipmentShipment(equipmentShipment *equi
 		{"date_end", &dateEnd},
 	}
 	if equipmentShipment.GetObjectID().IsZero() {
-		_, err := collection.InsertOne(context.TODO(), esBSON)
+		_, err := collection.InsertOne(ctx, esBSON)
 		if err != nil {
 			return err
 		}
@@ -36,11 +36,11 @@ func (mongoStorage *MongoStorage) WriteEquipmentShipment(equipmentShipment *equi
 	return nil
 }
 
-func (mongoStorage *MongoStorage) FindShipmentByContainer(containerNumber string) (*equipment_shipment.EquipmentShipment, error) {
+func (mongoStorage *MongoStorage) FindShipmentByContainer(containerNumber string, ctx context.Context) (*equipment_shipment.EquipmentShipment, error) {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("equipment_shipments")
 	opts := options.FindOne().SetSort(bson.D{{"date_start", -1}})
-	result := collection.FindOne(context.TODO(), bson.D{{"container_number", containerNumber}, {"date_end", nil}}, opts)
+	result := collection.FindOne(ctx, bson.D{{"container_number", containerNumber}, {"date_end", nil}}, opts)
 
 	var resultBson bson.M
 	err := result.Decode(&resultBson)

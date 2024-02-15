@@ -6,12 +6,13 @@ import (
 	"github.com/cherkasoviv/go_disl/internal/disloc_endpoints/rest_handlers"
 	"github.com/cherkasoviv/go_disl/internal/disloc_storage"
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/net/context"
 	"net/http"
 )
 
 func main() {
 	fmt.Println("test")
-	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false")
+	storage, err := disloc_storage.InitializeMongoStorage("mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false", context.Background())
 	if err != nil {
 		return
 	}

@@ -56,7 +56,7 @@ func NewEventProducer(uri string) *Producer {
 }
 
 func (producer *Producer) Publish(storage *disloc_storage.MongoStorage) {
-	events := storage.FindEquipmentToSend()
+	events := storage.FindEquipmentToSend(context.Background())
 	for objectID, event := range events {
 		amqpEvent := amqpEquipmentEvent{
 			StatusID:        event.GetStatus(),
@@ -80,7 +80,7 @@ func (producer *Producer) Publish(storage *disloc_storage.MongoStorage) {
 			log.Fatalf("producer: error in publish: %s", err)
 
 		}
-		err = storage.SetStatusSentForMatchedEvent(objectID)
+		err = storage.SetStatusSentForMatchedEvent(objectID, context.Background())
 		if err != nil {
 			return
 		}

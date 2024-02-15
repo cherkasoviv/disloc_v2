@@ -1,6 +1,7 @@
 package disloc_consumers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/cherkasoviv/go_disl/internal/disloc_storage"
@@ -145,7 +146,7 @@ func handle(deliveries <-chan amqp.Delivery, done chan error, storage *disloc_st
 			equipmentEventMessage.WagonNumber,
 			equipmentEventMessage.StationID,
 		)
-		err = storage.WriteEquipmentEvent(equipmentEvent, "new")
+		err = storage.WriteEquipmentEvent(equipmentEvent, "new", context.Background())
 		if err != nil {
 			return
 		}

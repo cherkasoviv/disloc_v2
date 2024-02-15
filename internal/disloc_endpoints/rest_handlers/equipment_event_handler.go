@@ -5,13 +5,14 @@ import (
 	"github.com/cherkasoviv/go_disl/internal/equipment_event"
 	"github.com/go-chi/render"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/net/context"
 	"net/http"
 	"time"
 )
 
 type eventSaver interface {
-	WriteEquipmentEvent(ee *equipment_event.EquipmentEvent, processingStatus string) error
-	FindEquipmentsByContainerNumber(containerNumber string) map[primitive.ObjectID]*equipment_event.EquipmentEvent
+	WriteEquipmentEvent(ee *equipment_event.EquipmentEvent, processingStatus string, ctx context.Context) error
+	FindEquipmentsByContainerNumber(containerNumber string, ctx context.Context) map[primitive.ObjectID]*equipment_event.EquipmentEvent
 }
 
 type EquipmentEventHandler struct {
@@ -55,7 +56,7 @@ func (eeHandler *EquipmentEventHandler) CreateEventFromREST() http.HandlerFunc {
 			req.WagonNumber,
 			req.StationID,
 		)
-		err = eeHandler.storage.WriteEquipmentEvent(equipmentEvent, "new")
+		err = eeHandler.storage.WriteEquipmentEvent(equipmentEvent, "new", context.Background())
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
 			return
@@ -79,7 +80,7 @@ func (eeHandler *EquipmentEventHandler) GetEventsByContainerNumber() http.Handle
 		}
 		containerNumber := req.ContainerNumber
 
-		events := eeHandler.storage.FindEquipmentsByContainerNumber(containerNumber)
+		events := eeHandler.storage.FindEquipmentsByContainerNumber(containerNumber, context.Background())
 		eventsJson, err := json.Marshal(events)
 
 		_, err = writer.Write(eventsJson)

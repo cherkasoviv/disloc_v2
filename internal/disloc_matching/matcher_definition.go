@@ -6,6 +6,7 @@ import (
 	"github.com/cherkasoviv/go_disl/internal/equipment_event"
 	"github.com/cherkasoviv/go_disl/internal/equipment_shipment"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/net/context"
 )
 
 type DislocMatcher struct {
@@ -20,13 +21,13 @@ func Initialize(storage *disloc_storage.MongoStorage, goroutinesNumber int) *Dis
 }
 
 func (matcher *DislocMatcher) Start() {
-	newContainersToMatch, err := matcher.storage.FindNewContainers()
+	newContainersToMatch, err := matcher.storage.FindNewContainers(context.Background())
 	if err != nil {
 		return
 	}
 	for _, container := range newContainersToMatch {
 		containerNumber := container.(string)
-		equipmentEvents := matcher.storage.FindEquipmentsByContainerNumber(containerNumber)
+		equipmentEvents := matcher.storage.FindEquipmentsByContainerNumber(containerNumber, context.Background())
 		needToFindShipment := true
 		var es *equipment_shipment.EquipmentShipment
 		var matchedEvents []*equipment_event.EquipmentEvent
@@ -42,17 +43,17 @@ func (matcher *DislocMatcher) Start() {
 				needToFindShipment = false
 				matchedEvents = append(matchedEvents, ee)
 				ee.SetObjectID(id)
-				err = matcher.storage.WriteEquipmentEvent(ee, "matched")
+				err = matcher.storage.WriteEquipmentEvent(ee, "matched", context.Background())
 				if err != nil {
 					return
 				}
 
 			}
 			if needToFindShipment {
-				es, err = matcher.storage.FindShipmentByContainer(containerNumber)
+				es, err = matcher.storage.FindShipmentByContainer(containerNumber, context.Background())
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					ee.SetObjectID(id)
-					err := matcher.storage.WriteEquipmentEvent(ee, "unmatched")
+					err := matcher.storage.WriteEquipmentEvent(ee, "unmatched", context.Background())
 					if err != nil {
 						return
 					}
@@ -71,19 +72,19 @@ func (matcher *DislocMatcher) Start() {
 						es.SetWagonNumber(ee.GetWagonNumber())
 					}
 					ee.SetObjectID(id)
-					err = matcher.storage.WriteEquipmentEvent(ee, "matched")
+					err = matcher.storage.WriteEquipmentEvent(ee, "matched", context.Background())
 					if err != nil {
 						return
 					}
 
 					if ee.GetStatus() == endShipmentEventStatusID {
 						es.SetDateEnd(ee.GetDateTime())
-						err := matcher.storage.WriteEquipmentShipment(es)
+						err := matcher.storage.WriteEquipmentShipment(es, context.Background())
 						if err != nil {
 							return
 						}
 						for _, me := range matchedEvents {
-							matcher.storage.WriteMatchedEvent(me, es)
+							matcher.storage.WriteMatchedEvent(me, es, context.Background())
 						}
 						matchedEvents = make([]*equipment_event.EquipmentEvent, 0)
 						needToFindShipment = true
@@ -91,7 +92,7 @@ func (matcher *DislocMatcher) Start() {
 
 				} else {
 					ee.SetObjectID(id)
-					err = matcher.storage.WriteEquipmentEvent(ee, "unmatched")
+					err = matcher.storage.WriteEquipmentEvent(ee, "unmatched", context.Background())
 					if err != nil {
 						return
 					}
@@ -100,7 +101,7 @@ func (matcher *DislocMatcher) Start() {
 
 		}
 		if es != nil {
-			err := matcher.storage.WriteEquipmentShipment(es)
+			err := matcher.storage.WriteEquipmentShipment(es, context.Background())
 			if err != nil {
 				return
 			}

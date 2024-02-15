@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (mongoStorage *MongoStorage) WriteEquipmentEvent(ee *equipment_event.EquipmentEvent, processingStatus string) error {
+func (mongoStorage *MongoStorage) WriteEquipmentEvent(ee *equipment_event.EquipmentEvent, processingStatus string, ctx context.Context) error {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("incoming_events")
 	eeBSON := bson.D{
@@ -23,12 +23,12 @@ func (mongoStorage *MongoStorage) WriteEquipmentEvent(ee *equipment_event.Equipm
 		{"status", processingStatus},
 	}
 	if ee.GetObjectID().IsZero() {
-		_, err := collection.InsertOne(context.TODO(), eeBSON)
+		_, err := collection.InsertOne(ctx, eeBSON)
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err := collection.UpdateByID(context.TODO(), ee.GetObjectID(), bson.D{{"$set", eeBSON}})
+		_, err := collection.UpdateByID(ctx, ee.GetObjectID(), bson.D{{"$set", eeBSON}})
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -37,36 +37,36 @@ func (mongoStorage *MongoStorage) WriteEquipmentEvent(ee *equipment_event.Equipm
 	return nil
 }
 
-func (mongoStorage *MongoStorage) FindNewContainers() ([]interface{}, error) {
+func (mongoStorage *MongoStorage) FindNewContainers(ctx context.Context) ([]interface{}, error) {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("incoming_events")
-	distinct, err := collection.Distinct(context.TODO(), "container_number", bson.D{{"status", "new"}})
+	distinct, err := collection.Distinct(ctx, "container_number", bson.D{{"status", "new"}})
 	if err != nil {
 		return nil, err
 	}
 	return distinct, nil
 }
 
-func (mongoStorage *MongoStorage) FindNewWagons() {
+func (mongoStorage *MongoStorage) FindNewWagons(ctx context.Context) {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("incoming_events")
-	distinct, err := collection.Distinct(context.TODO(), "wagon_number", bson.D{{"status", "new"}, {"container_number", ""}})
+	distinct, err := collection.Distinct(ctx, "wagon_number", bson.D{{"status", "new"}, {"container_number", ""}})
 	if err != nil {
 		return
 	}
 	fmt.Println(distinct)
 }
 
-func (mongoStorage *MongoStorage) FindEquipmentsByContainerNumber(containerNumber string) map[primitive.ObjectID]*equipment_event.EquipmentEvent {
+func (mongoStorage *MongoStorage) FindEquipmentsByContainerNumber(containerNumber string, ctx context.Context) map[primitive.ObjectID]*equipment_event.EquipmentEvent {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("incoming_events")
 	opts := options.Find().SetSort(bson.D{{"datetime", 1}})
-	result, err := collection.Find(context.TODO(), bson.D{{"container_number", containerNumber}}, opts)
+	result, err := collection.Find(ctx, bson.D{{"container_number", containerNumber}}, opts)
 	if err != nil {
 		return nil
 	}
 	var resultBson []bson.M
-	err = result.All(context.TODO(), &resultBson)
+	err = result.All(ctx, &resultBson)
 	if err != nil {
 		return nil
 	}
@@ -86,7 +86,7 @@ func (mongoStorage *MongoStorage) FindEquipmentsByContainerNumber(containerNumbe
 	return events
 }
 
-func (mongoStorage *MongoStorage) WriteMatchedEvent(ee *equipment_event.EquipmentEvent, es *equipment_shipment.EquipmentShipment) error {
+func (mongoStorage *MongoStorage) WriteMatchedEvent(ee *equipment_event.EquipmentEvent, es *equipment_shipment.EquipmentShipment, ctx context.Context) error {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("outcoming_events")
 	eeBSON := bson.D{
@@ -99,7 +99,7 @@ func (mongoStorage *MongoStorage) WriteMatchedEvent(ee *equipment_event.Equipmen
 		{"status", "not_sent"},
 	}
 
-	_, err := collection.InsertOne(context.TODO(), eeBSON)
+	_, err := collection.InsertOne(ctx, eeBSON)
 	if err != nil {
 		return err
 	}
@@ -107,16 +107,16 @@ func (mongoStorage *MongoStorage) WriteMatchedEvent(ee *equipment_event.Equipmen
 	return nil
 }
 
-func (mongoStorage *MongoStorage) FindEquipmentToSend() map[primitive.ObjectID]*equipment_event.EquipmentEvent {
+func (mongoStorage *MongoStorage) FindEquipmentToSend(ctx context.Context) map[primitive.ObjectID]*equipment_event.EquipmentEvent {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("outcoming_events")
 	opts := options.Find().SetSort(bson.D{{"datetime", 1}})
-	result, err := collection.Find(context.TODO(), bson.D{{"status", "not_sent"}}, opts)
+	result, err := collection.Find(ctx, bson.D{{"status", "not_sent"}}, opts)
 	if err != nil {
 		return nil
 	}
 	var resultBson []bson.M
-	err = result.All(context.TODO(), &resultBson)
+	err = result.All(ctx, &resultBson)
 	if err != nil {
 		return nil
 	}
@@ -136,10 +136,10 @@ func (mongoStorage *MongoStorage) FindEquipmentToSend() map[primitive.ObjectID]*
 	return events
 }
 
-func (mongoStorage *MongoStorage) SetStatusSentForMatchedEvent(id primitive.ObjectID) error {
+func (mongoStorage *MongoStorage) SetStatusSentForMatchedEvent(id primitive.ObjectID, ctx context.Context) error {
 	db := mongoStorage.client.Database("dislocation")
 	collection := db.Collection("outcoming_events")
-	_, err := collection.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"status", "sent"}}}})
+	_, err := collection.UpdateByID(ctx, id, bson.D{{"$set", bson.D{{"status", "sent"}}}})
 	if err != nil {
 		fmt.Println(err)
 		return err

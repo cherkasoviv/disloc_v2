@@ -12,8 +12,8 @@ type MongoStorage struct {
 }
 
 // TODO add conn string from config
-func InitializeMongoStorage(uri string) (*MongoStorage, error) {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+func InitializeMongoStorage(uri string, ctx context.Context) (*MongoStorage, error) {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
